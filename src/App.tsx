@@ -15,6 +15,8 @@ import NotFound from "./pages/NotFound";
 import CustomerDashboard from "./pages/customer/Dashboard";
 import ConsultantDashboard from "./pages/consultant/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
+import NewServiceRequest from "./pages/customer/NewServiceRequest";
+import ServiceRequestDetail from "./pages/customer/ServiceRequestDetail";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,16 @@ const AppRoutes = () => {
       <Route path="/customer/dashboard" element={
         <ProtectedRoute requiredRoles={['customer']}>
           <CustomerDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/customer/new-request" element={
+        <ProtectedRoute requiredRoles={['customer']}>
+          <NewServiceRequest />
+        </ProtectedRoute>
+      } />
+      <Route path="/customer/request/:id" element={
+        <ProtectedRoute requiredRoles={['customer']}>
+          <ServiceRequestDetail />
         </ProtectedRoute>
       } />
       
