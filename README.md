@@ -1,4 +1,27 @@
 
+
+
+
+
+Todo List
+1> Residential Statu - Resident/ Non-Resident
+2> Gross Income / Turnover Range - convert to dropdown
+3> Popup  Adjurment - notice if less than 48 hours
+
+Super Admin
+Casewise revenue Chart
+Consultant payout update 
+
+
+
+
+
+
+
+
+
+
+
 **Use your preferred IDE**
 
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
