@@ -355,9 +355,24 @@ const AdminDashboard = () => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Revenue Statistics</h2>
             <div className="space-x-2">
-              <Button variant="outline" active={selectedDateRange === 'week'} onClick={() => handleDateRangeChange('week')}>This Week</Button>
-              <Button variant="outline" active={selectedDateRange === 'month'} onClick={() => handleDateRangeChange('month')}>This Month</Button>
-              <Button variant="outline" active={selectedDateRange === 'year'} onClick={() => handleDateRangeChange('year')}>This Year</Button>
+              <Button 
+                variant={selectedDateRange === 'week' ? "default" : "outline"} 
+                onClick={() => handleDateRangeChange('week')}
+              >
+                This Week
+              </Button>
+              <Button 
+                variant={selectedDateRange === 'month' ? "default" : "outline"} 
+                onClick={() => handleDateRangeChange('month')}
+              >
+                This Month
+              </Button>
+              <Button 
+                variant={selectedDateRange === 'year' ? "default" : "outline"} 
+                onClick={() => handleDateRangeChange('year')}
+              >
+                This Year
+              </Button>
             </div>
           </div>
 
