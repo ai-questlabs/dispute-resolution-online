@@ -22,7 +22,8 @@ import {
   Eye,
   Calendar,
   CheckCircle,
-  Clock
+  Clock,
+  UserCheck
 } from 'lucide-react';
 import { incomeSlabs, entityTypes, serviceTypes, getPackagePrice, EntityType, ServiceType } from '@/utils/packagePricing';
 
@@ -88,6 +89,45 @@ const initialConsultants = [
   },
 ];
 
+const initialRequests = [
+  {
+    id: 1,
+    title: 'Income Tax Assessment Query',
+    customer: 'John Doe',
+    customerEmail: 'john@example.com',
+    category: 'Income Tax',
+    status: 'pending',
+    createdAt: '2024-01-15',
+    priority: 'High',
+    description: 'Need help with income tax assessment notice',
+    assignedTo: null,
+  },
+  {
+    id: 2,
+    title: 'GST Return Filing',
+    customer: 'Jane Smith',
+    customerEmail: 'jane@example.com',
+    category: 'GST',
+    status: 'assigned',
+    createdAt: '2024-01-14',
+    priority: 'Medium',
+    description: 'Assistance required for GST return filing',
+    assignedTo: 'CA. Rajesh Kumar',
+  },
+  {
+    id: 3,
+    title: 'Corporate Tax Planning',
+    customer: 'ABC Corp',
+    customerEmail: 'admin@abccorp.com',
+    category: 'Corporate Tax',
+    status: 'in-progress',
+    createdAt: '2024-01-13',
+    priority: 'High',
+    description: 'Strategic tax planning for the upcoming financial year',
+    assignedTo: 'CA. Priya Sharma',
+  },
+];
+
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
@@ -134,13 +174,15 @@ const AdminDashboard = () => {
   ]);
 
   const [consultants, setConsultants] = useState(initialConsultants);
+  const [requests, setRequests] = useState(initialRequests);
   const [isConsultantDialogOpen, setIsConsultantDialogOpen] = useState(false);
   const [isEditingConsultant, setIsEditingConsultant] = useState(false);
   const [selectedConsultant, setSelectedConsultant] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
 
   const handleDateRangeChange = (range: string) => {
     setSelectedDateRange(range);
-    // In a real application, you would fetch data based on the selected date range
     console.log(`Fetching data for: ${range}`);
   };
 
@@ -266,14 +308,57 @@ const AdminDashboard = () => {
     return getPackagePrice(slabId, entityType, serviceType);
   };
 
+  const handleAssignRequest = (request) => {
+    setSelectedRequest(request);
+    setIsAssignDialogOpen(true);
+  };
+
+  const handleConfirmAssignment = (consultantName: string) => {
+    if (!selectedRequest) return;
+
+    setRequests(requests.map(req =>
+      req.id === selectedRequest.id
+        ? { ...req, assignedTo: consultantName, status: 'assigned' }
+        : req
+    ));
+
+    setIsAssignDialogOpen(false);
+    setSelectedRequest(null);
+
+    toast({
+      title: "Request Assigned",
+      description: `Request has been assigned to ${consultantName} successfully.`,
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'assigned': return 'bg-blue-100 text-blue-800';
+      case 'in-progress': return 'bg-purple-100 text-purple-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'High': return 'bg-red-100 text-red-800';
+      case 'Medium': return 'bg-orange-100 text-orange-800';
+      case 'Low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Super Admin Dashboard</h1>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="revenue">Revenue</TabsTrigger>
+          <TabsTrigger value="requests">Requests</TabsTrigger>
           <TabsTrigger value="consultants">Consultants</TabsTrigger>
           <TabsTrigger value="packages">Packages</TabsTrigger>
         </TabsList>
@@ -397,6 +482,126 @@ const AdminDashboard = () => {
               Data from the last 12 months
             </CardFooter>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="requests" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Request Management</h2>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>All Service Requests</CardTitle>
+              <CardDescription>View and manage all customer service requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Request ID</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Created Date</TableHead>
+                    <TableHead>Assigned To</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {requests.map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell className="font-medium">#{request.id}</TableCell>
+                      <TableCell>{request.title}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{request.customer}</div>
+                          <div className="text-sm text-gray-500">{request.customerEmail}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{request.category}</TableCell>
+                      <TableCell>
+                        <Badge className={`${getStatusColor(request.status)} border-0`}>
+                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={`${getPriorityColor(request.priority)} border-0`}>
+                          {request.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{request.createdAt}</TableCell>
+                      <TableCell>
+                        {request.assignedTo ? (
+                          <span className="text-sm font-medium">{request.assignedTo}</span>
+                        ) : (
+                          <span className="text-sm text-gray-500">Unassigned</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAssignRequest(request)}
+                            disabled={request.status === 'completed'}
+                          >
+                            <UserCheck className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Assignment Dialog */}
+          <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Assign Request to Consultant</DialogTitle>
+                <DialogDescription>
+                  Select a consultant to assign this request to.
+                </DialogDescription>
+              </DialogHeader>
+              {selectedRequest && (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium">{selectedRequest.title}</h4>
+                    <p className="text-sm text-gray-600">{selectedRequest.description}</p>
+                    <p className="text-sm text-gray-500 mt-2">Customer: {selectedRequest.customer}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="consultantSelect">Select Consultant</Label>
+                    <Select onValueChange={(value) => handleConfirmAssignment(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a consultant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {consultants.filter(c => c.activeStatus === 'Active').map((consultant) => (
+                          <SelectItem key={consultant.id} value={consultant.name}>
+                            <div className="flex flex-col">
+                              <span>{consultant.name}</span>
+                              <span className="text-xs text-gray-500">{consultant.expertise}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="consultants" className="space-y-6">
