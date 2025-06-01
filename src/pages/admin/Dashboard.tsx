@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { RequestStatus } from '../../types';
 import { 
@@ -15,6 +18,22 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { 
   BarChart, 
   Bar, 
   XAxis, 
@@ -25,9 +44,12 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  LineChart,
+  Line
 } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
+import { CalendarIcon, Plus, Edit, Trash2, DollarSign } from 'lucide-react';
 
 // Mock data for demonstration
 const mockRequests = [
@@ -74,10 +96,46 @@ const mockRequests = [
 ];
 
 const mockConsultants = [
-  { id: '1', name: 'Jane Consultant', email: 'jane@example.com', specialization: 'Income Tax, GST', casesCompleted: 15, activeRequests: 2 },
-  { id: '2', name: 'Mike Expert', email: 'mike@example.com', specialization: 'Corporate Tax, International Tax', casesCompleted: 23, activeRequests: 3 },
-  { id: '3', name: 'Sarah Specialist', email: 'sarah@example.com', specialization: 'Tax Appeals, GST', casesCompleted: 8, activeRequests: 1 },
-  { id: '4', name: 'Tom Advisor', email: 'tom@example.com', specialization: 'Income Tax, Corporate Tax', casesCompleted: 19, activeRequests: 0 },
+  { 
+    id: '1', 
+    name: 'Jane Consultant', 
+    email: 'jane@example.com', 
+    specialization: 'Income Tax, GST', 
+    casesCompleted: 15, 
+    activeRequests: 2,
+    totalEarnings: 450000,
+    pendingPayment: 67500
+  },
+  { 
+    id: '2', 
+    name: 'Mike Expert', 
+    email: 'mike@example.com', 
+    specialization: 'Corporate Tax, International Tax', 
+    casesCompleted: 23, 
+    activeRequests: 3,
+    totalEarnings: 690000,
+    pendingPayment: 103500
+  },
+  { 
+    id: '3', 
+    name: 'Sarah Specialist', 
+    email: 'sarah@example.com', 
+    specialization: 'Tax Appeals, GST', 
+    casesCompleted: 8, 
+    activeRequests: 1,
+    totalEarnings: 240000,
+    pendingPayment: 36000
+  },
+  { 
+    id: '4', 
+    name: 'Tom Advisor', 
+    email: 'tom@example.com', 
+    specialization: 'Income Tax, Corporate Tax', 
+    casesCompleted: 19, 
+    activeRequests: 0,
+    totalEarnings: 570000,
+    pendingPayment: 0
+  },
 ];
 
 const mockCustomers = [
@@ -88,22 +146,31 @@ const mockCustomers = [
   { id: '5', name: 'David Miller', email: 'david@example.com', requests: 1, joinDate: '2023-06-01' },
 ];
 
-// Chart data
-const statusData = [
-  { name: 'Pending', value: 5 },
-  { name: 'Assigned', value: 3 },
-  { name: 'In Progress', value: 8 },
-  { name: 'Needs Clarification', value: 2 },
-  { name: 'Completed', value: 12 },
+// New mock data for service packages
+const mockServicePackages = [
+  { id: '1', name: 'Responses to Communications/Showcause Notices', basePrice: 3000 },
+  { id: '2', name: 'Rectification Applications', basePrice: 3000 },
+  { id: '3', name: 'Responses for handling Grievances', basePrice: 2500 },
+  { id: '4', name: 'Responses to Assessment/Scrutiny/Demand Proceedings', basePrice: 5000 },
+  { id: '5', name: 'Responses to Penalty Proceedings', basePrice: 7500 },
+  { id: '6', name: 'Transfer Pricing Disputes', basePrice: 10000 },
 ];
 
-const monthlyData = [
-  { name: 'Jan', requests: 4, completed: 3 },
-  { name: 'Feb', requests: 6, completed: 4 },
-  { name: 'Mar', requests: 8, completed: 5 },
-  { name: 'Apr', requests: 10, completed: 7 },
-  { name: 'May', requests: 12, completed: 9 },
-  { name: 'Jun', requests: 9, completed: 6 },
+// Revenue data for charts
+const revenueData = [
+  { name: 'Week 1', revenue: 125000, cases: 5 },
+  { name: 'Week 2', revenue: 180000, cases: 8 },
+  { name: 'Week 3', revenue: 95000, cases: 4 },
+  { name: 'Week 4', revenue: 220000, cases: 9 },
+];
+
+const monthlyRevenueData = [
+  { name: 'Jan', revenue: 450000, cases: 18 },
+  { name: 'Feb', revenue: 520000, cases: 22 },
+  { name: 'Mar', revenue: 380000, cases: 16 },
+  { name: 'Apr', revenue: 680000, cases: 28 },
+  { name: 'May', revenue: 590000, cases: 24 },
+  { name: 'Jun', revenue: 720000, cases: 30 },
 ];
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
@@ -112,6 +179,16 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedTimeRange, setSelectedTimeRange] = useState('week');
+  const [isAddConsultantOpen, setIsAddConsultantOpen] = useState(false);
+  const [isEditPackageOpen, setIsEditPackageOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [newConsultant, setNewConsultant] = useState({
+    name: '',
+    email: '',
+    password: '',
+    specialization: ''
+  });
 
   const handleAssignConsultant = (requestId: string) => {
     toast({
@@ -125,6 +202,31 @@ const AdminDashboard = () => {
       title: `Viewing ${type} details`,
       description: `Details for ${type} ID: ${id}`,
     });
+  };
+
+  const handlePaymentUpdate = (consultantId: string, amount: number) => {
+    toast({
+      title: "Payment Updated",
+      description: `Payment of ₹${amount.toLocaleString('en-IN')} processed for consultant.`,
+    });
+  };
+
+  const handleAddConsultant = () => {
+    console.log('Adding consultant:', newConsultant);
+    toast({
+      title: "Consultant Added",
+      description: `${newConsultant.name} has been added successfully.`,
+    });
+    setIsAddConsultantOpen(false);
+    setNewConsultant({ name: '', email: '', password: '', specialization: '' });
+  };
+
+  const handleUpdatePackage = () => {
+    toast({
+      title: "Package Updated",
+      description: `${selectedPackage?.name} has been updated successfully.`,
+    });
+    setIsEditPackageOpen(false);
   };
 
   const getStatusBadge = (status: RequestStatus) => {
@@ -144,6 +246,10 @@ const AdminDashboard = () => {
     }
   };
 
+  const getCurrentRevenueData = () => {
+    return selectedTimeRange === 'week' ? revenueData : monthlyRevenueData;
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
@@ -157,10 +263,12 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 mb-8">
+        <TabsList className="grid grid-cols-6 mb-8">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="revenue">Revenue</TabsTrigger>
           <TabsTrigger value="requests">Service Requests</TabsTrigger>
           <TabsTrigger value="consultants">Consultants</TabsTrigger>
+          <TabsTrigger value="packages">Packages</TabsTrigger>
           <TabsTrigger value="customers">Customers</TabsTrigger>
         </TabsList>
 
@@ -194,12 +302,12 @@ const AdminDashboard = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Registered Customers</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-500">Total Revenue</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">45</div>
+                <div className="text-3xl font-bold">₹12.5L</div>
                 <p className="text-xs text-green-500 flex items-center mt-1">
-                  <span>↑ 5</span>
+                  <span>↑ 18%</span>
                   <span className="text-gray-400 ml-1">from last month</span>
                 </p>
               </CardContent>
@@ -207,13 +315,13 @@ const AdminDashboard = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Completion Rate</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-500">Pending Payments</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">85%</div>
-                <p className="text-xs text-green-500 flex items-center mt-1">
-                  <span>↑ 3%</span>
-                  <span className="text-gray-400 ml-1">from last month</span>
+                <div className="text-3xl font-bold">₹2.07L</div>
+                <p className="text-xs text-red-500 flex items-center mt-1">
+                  <span>↑ 5%</span>
+                  <span className="text-gray-400 ml-1">from last week</span>
                 </p>
               </CardContent>
             </Card>
@@ -278,6 +386,46 @@ const AdminDashboard = () => {
           </div>
         </TabsContent>
 
+        <TabsContent value="revenue">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Revenue Analytics</CardTitle>
+                  <CardDescription>Case-wise revenue for different time periods</CardDescription>
+                </div>
+                <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="week">Weekly</SelectItem>
+                    <SelectItem value="month">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={getCurrentRevenueData()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip formatter={(value, name) => [
+                      name === 'revenue' ? `₹${(value as number).toLocaleString('en-IN')}` : value,
+                      name === 'revenue' ? 'Revenue' : 'Cases'
+                    ]} />
+                    <Legend />
+                    <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} />
+                    <Line type="monotone" dataKey="cases" stroke="#10B981" strokeWidth={3} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="requests">
           <Card>
             <CardHeader>
@@ -340,8 +488,71 @@ const AdminDashboard = () => {
         <TabsContent value="consultants">
           <Card>
             <CardHeader>
-              <CardTitle>Consultants</CardTitle>
-              <CardDescription>Manage tax litigation consultants</CardDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Consultants</CardTitle>
+                  <CardDescription>Manage tax litigation consultants and their earnings</CardDescription>
+                </div>
+                <Dialog open={isAddConsultantOpen} onOpenChange={setIsAddConsultantOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-brand-blue hover:bg-brand-lightblue">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Consultant
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Consultant</DialogTitle>
+                      <DialogDescription>
+                        Create a new consultant account with login credentials
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input
+                          id="name"
+                          value={newConsultant.name}
+                          onChange={(e) => setNewConsultant({...newConsultant, name: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={newConsultant.email}
+                          onChange={(e) => setNewConsultant({...newConsultant, email: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="password">Password</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={newConsultant.password}
+                          onChange={(e) => setNewConsultant({...newConsultant, password: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="specialization">Specialization</Label>
+                        <Textarea
+                          id="specialization"
+                          value={newConsultant.specialization}
+                          onChange={(e) => setNewConsultant({...newConsultant, specialization: e.target.value})}
+                          placeholder="e.g., Income Tax, GST, Corporate Tax"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddConsultantOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleAddConsultant}>Add Consultant</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -351,7 +562,8 @@ const AdminDashboard = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Specialization</TableHead>
                     <TableHead>Cases Completed</TableHead>
-                    <TableHead>Active Requests</TableHead>
+                    <TableHead>Total Earnings</TableHead>
+                    <TableHead>Pending Payment</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -362,15 +574,32 @@ const AdminDashboard = () => {
                       <TableCell>{consultant.email}</TableCell>
                       <TableCell>{consultant.specialization}</TableCell>
                       <TableCell>{consultant.casesCompleted}</TableCell>
-                      <TableCell>{consultant.activeRequests}</TableCell>
+                      <TableCell>₹{consultant.totalEarnings.toLocaleString('en-IN')}</TableCell>
                       <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleViewDetails(consultant.id, 'consultant')}
-                        >
-                          View Profile
-                        </Button>
+                        <span className={consultant.pendingPayment > 0 ? "text-red-600 font-medium" : "text-green-600"}>
+                          ₹{consultant.pendingPayment.toLocaleString('en-IN')}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleViewDetails(consultant.id, 'consultant')}
+                          >
+                            View
+                          </Button>
+                          {consultant.pendingPayment > 0 && (
+                            <Button 
+                              size="sm"
+                              variant="default"
+                              onClick={() => handlePaymentUpdate(consultant.id, consultant.pendingPayment)}
+                            >
+                              <DollarSign className="mr-1 h-3 w-3" />
+                              Pay
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -381,6 +610,83 @@ const AdminDashboard = () => {
               <Button variant="outline">Previous</Button>
               <Button variant="outline">Next</Button>
             </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="packages">
+          <Card>
+            <CardHeader>
+              <CardTitle>Service Packages</CardTitle>
+              <CardDescription>Manage different service packages and their pricing</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Package Name</TableHead>
+                    <TableHead>Base Price</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockServicePackages.map((pkg) => (
+                    <TableRow key={pkg.id}>
+                      <TableCell className="font-medium">{pkg.name}</TableCell>
+                      <TableCell>₹{pkg.basePrice.toLocaleString('en-IN')}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Dialog open={isEditPackageOpen && selectedPackage?.id === pkg.id} onOpenChange={setIsEditPackageOpen}>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setSelectedPackage(pkg)}
+                              >
+                                <Edit className="mr-1 h-3 w-3" />
+                                Edit
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edit Service Package</DialogTitle>
+                                <DialogDescription>
+                                  Update the package details and pricing
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="packageName">Package Name</Label>
+                                  <Input
+                                    id="packageName"
+                                    value={selectedPackage?.name || ''}
+                                    onChange={(e) => setSelectedPackage({...selectedPackage, name: e.target.value})}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="basePrice">Base Price (₹)</Label>
+                                  <Input
+                                    id="basePrice"
+                                    type="number"
+                                    value={selectedPackage?.basePrice || ''}
+                                    onChange={(e) => setSelectedPackage({...selectedPackage, basePrice: parseInt(e.target.value)})}
+                                  />
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsEditPackageOpen(false)}>
+                                  Cancel
+                                </Button>
+                                <Button onClick={handleUpdatePackage}>Update Package</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
           </Card>
         </TabsContent>
 

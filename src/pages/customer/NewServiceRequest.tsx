@@ -70,6 +70,9 @@ const serviceRequestSchema = z.object({
   incomeRangeId: z.string({
     required_error: "Income/Turnover range is required",
   }),
+  residentialStatus: z.string({
+    required_error: "Residential status is required",
+  }),
   description: z.string().min(10, 'Description must be at least 10 characters'),
 });
 
@@ -297,29 +300,50 @@ const NewServiceRequest = () => {
                 )}
               />
 
-              {/* Income Range */}
+              {/* Residential Status */}
+              <FormField
+                control={form.control}
+                name="residentialStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Residential Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select residential status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="resident">Resident</SelectItem>
+                        <SelectItem value="non-resident">Non-Resident</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Income Range - Changed to Dropdown */}
               <FormField
                 control={form.control}
                 name="incomeRangeId"
                 render={({ field }) => (
-                  <FormItem className="space-y-3">
+                  <FormItem>
                     <FormLabel>Gross Income / Turnover Range</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="space-y-1"
-                      >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select income range" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                         {incomeRanges.map((range) => (
-                          <div key={range.id} className="flex items-center space-x-3 space-y-0">
-                            <RadioGroupItem value={range.id.toString()} />
-                            <Label htmlFor={range.id.toString()} className="font-normal">
-                              {range.description}
-                            </Label>
-                          </div>
+                          <SelectItem key={range.id} value={range.id.toString()}>
+                            {range.description}
+                          </SelectItem>
                         ))}
-                      </RadioGroup>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -358,7 +382,7 @@ const NewServiceRequest = () => {
                 </div>
               )}
 
-              {/* Document Upload Section - In a real app, you would implement file upload functionality */}
+              {/* Document Upload Section */}
               <div className="border rounded-md p-4">
                 <h3 className="font-medium text-gray-900 mb-2 flex items-center">
                   <FileText className="h-4 w-4 mr-2" />
