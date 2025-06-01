@@ -1,578 +1,488 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { RequestStatus } from '../../types';
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { useToast } from '@/hooks/use-toast';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line
-} from 'recharts';
-import { useAuth } from '../../context/AuthContext';
-import { CalendarIcon, Plus, Edit, Trash2, DollarSign } from 'lucide-react';
+  Users, 
+  DollarSign, 
+  FileText, 
+  TrendingUp, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Eye,
+  Calendar,
+  CheckCircle,
+  Clock
+} from 'lucide-react';
+import { incomeSlabs, entityTypes, serviceTypes, getPackagePrice, EntityType, ServiceType } from '@/utils/packagePricing';
 
-// Mock data for demonstration
-const mockRequests = [
-  { 
-    id: '1', 
-    title: 'Income Tax Dispute Resolution', 
-    customer: 'John Smith', 
-    consultant: 'Jane Consultant', 
-    status: 'completed' as RequestStatus, 
-    date: '2023-05-15' 
-  },
-  { 
-    id: '2', 
-    title: 'GST Audit Support', 
-    customer: 'Alice Johnson', 
-    consultant: 'Unassigned', 
-    status: 'pending' as RequestStatus, 
-    date: '2023-06-02' 
-  },
-  { 
-    id: '3', 
-    title: 'Corporate Tax Planning', 
-    customer: 'Robert Brown', 
-    consultant: 'Mike Expert', 
-    status: 'in-progress' as RequestStatus, 
-    date: '2023-06-10' 
-  },
-  { 
-    id: '4', 
-    title: 'International Tax Compliance', 
-    customer: 'Sarah Wilson', 
-    consultant: 'Jane Consultant', 
-    status: 'needs-clarification' as RequestStatus, 
-    date: '2023-06-15' 
-  },
-  { 
-    id: '5', 
-    title: 'Tax Appeal Representation', 
-    customer: 'David Miller', 
-    consultant: 'Mike Expert', 
-    status: 'assigned' as RequestStatus, 
-    date: '2023-06-20' 
-  },
+const data = [
+  { name: 'Jan', Users: 4000, Revenue: 2400 },
+  { name: 'Feb', Users: 3000, Revenue: 1398 },
+  { name: 'Mar', Users: 2000, Revenue: 9800 },
+  { name: 'Apr', Users: 2780, Revenue: 3908 },
+  { name: 'May', Users: 1890, Revenue: 4800 },
+  { name: 'Jun', Users: 2390, Revenue: 3800 },
+  { name: 'Jul', Users: 3490, Revenue: 4300 },
+  { name: 'Aug', Users: 4000, Revenue: 2400 },
+  { name: 'Sep', Users: 3000, Revenue: 1398 },
+  { name: 'Oct', Users: 2000, Revenue: 9800 },
+  { name: 'Nov', Users: 2780, Revenue: 3908 },
+  { name: 'Dec', Users: 1890, Revenue: 4800 },
 ];
 
-const mockConsultants = [
-  { 
-    id: '1', 
-    name: 'Jane Consultant', 
-    email: 'jane@example.com', 
-    specialization: 'Income Tax, GST', 
-    casesCompleted: 15, 
-    activeRequests: 2,
-    totalEarnings: 450000,
-    pendingPayment: 67500
+const pieChartData = [
+  { name: 'Income Tax', value: 400 },
+  { name: 'GST', value: 300 },
+  { name: 'Corporate Tax', value: 300 },
+  { name: 'Transfer Pricing', value: 200 },
+];
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+const RADIAN = Math.PI / 180;
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
+const initialConsultants = [
+  {
+    id: 1,
+    name: 'CA. Rajesh Kumar',
+    email: 'rajesh@example.com',
+    phone: '+91 9876543210',
+    expertise: 'Income Tax, GST',
+    totalEarnings: 180000,
+    pendingPayment: 45000,
+    completedCases: 15,
+    activeStatus: 'Active',
   },
-  { 
-    id: '2', 
-    name: 'Mike Expert', 
-    email: 'mike@example.com', 
-    specialization: 'Corporate Tax, International Tax', 
-    casesCompleted: 23, 
-    activeRequests: 3,
-    totalEarnings: 690000,
-    pendingPayment: 103500
-  },
-  { 
-    id: '3', 
-    name: 'Sarah Specialist', 
-    email: 'sarah@example.com', 
-    specialization: 'Tax Appeals, GST', 
-    casesCompleted: 8, 
-    activeRequests: 1,
+  {
+    id: 2,
+    name: 'CA. Priya Sharma',
+    email: 'priya@example.com',
+    phone: '+91 9876543211',
+    expertise: 'Corporate Tax, Transfer Pricing',
     totalEarnings: 240000,
-    pendingPayment: 36000
-  },
-  { 
-    id: '4', 
-    name: 'Tom Advisor', 
-    email: 'tom@example.com', 
-    specialization: 'Income Tax, Corporate Tax', 
-    casesCompleted: 19, 
-    activeRequests: 0,
-    totalEarnings: 570000,
-    pendingPayment: 0
+    pendingPayment: 60000,
+    completedCases: 20,
+    activeStatus: 'Active',
   },
 ];
-
-const mockCustomers = [
-  { id: '1', name: 'John Smith', email: 'john@example.com', requests: 3, joinDate: '2023-01-15' },
-  { id: '2', name: 'Alice Johnson', email: 'alice@example.com', requests: 1, joinDate: '2023-03-22' },
-  { id: '3', name: 'Robert Brown', email: 'robert@example.com', requests: 2, joinDate: '2023-04-10' },
-  { id: '4', name: 'Sarah Wilson', email: 'sarah.w@example.com', requests: 1, joinDate: '2023-05-05' },
-  { id: '5', name: 'David Miller', email: 'david@example.com', requests: 1, joinDate: '2023-06-01' },
-];
-
-// New mock data for service packages
-const mockServicePackages = [
-  { id: '1', name: 'Responses to Communications/Showcause Notices', basePrice: 3000 },
-  { id: '2', name: 'Rectification Applications', basePrice: 3000 },
-  { id: '3', name: 'Responses for handling Grievances', basePrice: 2500 },
-  { id: '4', name: 'Responses to Assessment/Scrutiny/Demand Proceedings', basePrice: 5000 },
-  { id: '5', name: 'Responses to Penalty Proceedings', basePrice: 7500 },
-  { id: '6', name: 'Transfer Pricing Disputes', basePrice: 10000 },
-];
-
-// Revenue data for charts
-const revenueData = [
-  { name: 'Week 1', revenue: 125000, cases: 5 },
-  { name: 'Week 2', revenue: 180000, cases: 8 },
-  { name: 'Week 3', revenue: 95000, cases: 4 },
-  { name: 'Week 4', revenue: 220000, cases: 9 },
-];
-
-const monthlyRevenueData = [
-  { name: 'Jan', revenue: 450000, cases: 18 },
-  { name: 'Feb', revenue: 520000, cases: 22 },
-  { name: 'Mar', revenue: 380000, cases: 16 },
-  { name: 'Apr', revenue: 680000, cases: 28 },
-  { name: 'May', revenue: 590000, cases: 24 },
-  { name: 'Jun', revenue: 720000, cases: 30 },
-];
-
-// Add missing monthlyData for the overview tab
-const monthlyData = [
-  { name: 'Jan', requests: 18, completed: 15 },
-  { name: 'Feb', requests: 22, completed: 20 },
-  { name: 'Mar', requests: 16, completed: 14 },
-  { name: 'Apr', requests: 28, completed: 25 },
-  { name: 'May', requests: 24, completed: 22 },
-  { name: 'Jun', requests: 30, completed: 28 },
-];
-
-// Add missing statusData for the overview tab
-const statusData = [
-  { name: 'Pending', value: 5 },
-  { name: 'Assigned', value: 8 },
-  { name: 'In Progress', value: 12 },
-  { name: 'Needs Clarification', value: 3 },
-  { name: 'Completed', value: 15 },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedTimeRange, setSelectedTimeRange] = useState('week');
-  const [isAddConsultantOpen, setIsAddConsultantOpen] = useState(false);
-  const [isEditPackageOpen, setIsEditPackageOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [selectedDateRange, setSelectedDateRange] = useState('week');
+  const [newPackage, setNewPackage] = useState({
+    name: '',
+    description: '',
+    slabId: 1,
+    entityType: 'individual' as EntityType,
+    serviceType: 'communications' as ServiceType,
+    price: 0,
+  });
+  const [editingPackage, setEditingPackage] = useState<any>(null);
   const [newConsultant, setNewConsultant] = useState({
     name: '',
     email: '',
+    phone: '',
+    expertise: '',
+    username: '',
     password: '',
-    specialization: ''
   });
 
-  const handleAssignConsultant = (requestId: string) => {
+  const [packages, setPackages] = useState([
+    {
+      id: 1,
+      name: 'Basic Income Tax Package',
+      description: 'Standard income tax dispute resolution',
+      slabId: 1,
+      entityType: 'individual' as EntityType,
+      serviceType: 'communications' as ServiceType,
+      price: 3000,
+      isActive: true,
+    },
+    {
+      id: 2,
+      name: 'GST Assessment Package',
+      description: 'GST assessment and scrutiny services',
+      slabId: 2,
+      entityType: 'company' as EntityType,
+      serviceType: 'assessment' as ServiceType,
+      price: 15000,
+      isActive: true,
+    },
+  ]);
+
+  const [consultants, setConsultants] = useState(initialConsultants);
+  const [isConsultantDialogOpen, setIsConsultantDialogOpen] = useState(false);
+  const [isEditingConsultant, setIsEditingConsultant] = useState(false);
+  const [selectedConsultant, setSelectedConsultant] = useState(null);
+
+  const handleDateRangeChange = (range: string) => {
+    setSelectedDateRange(range);
+    // In a real application, you would fetch data based on the selected date range
+    console.log(`Fetching data for: ${range}`);
+  };
+
+  const handleCreateConsultant = () => {
+    const newId = consultants.length > 0 ? Math.max(...consultants.map(c => c.id)) + 1 : 1;
+    const consultantToAdd = {
+      id: newId,
+      name: newConsultant.name,
+      email: newConsultant.email,
+      phone: newConsultant.phone,
+      expertise: newConsultant.expertise,
+      totalEarnings: 0,
+      pendingPayment: 0,
+      completedCases: 0,
+      activeStatus: 'Active',
+    };
+
+    setConsultants([...consultants, consultantToAdd]);
+    setNewConsultant({
+      name: '',
+      email: '',
+      phone: '',
+      expertise: '',
+      username: '',
+      password: '',
+    });
+    setIsConsultantDialogOpen(false);
+
     toast({
-      title: "Consultant assigned",
-      description: `Request #${requestId} has been assigned to a consultant.`,
+      title: "Consultant Created",
+      description: "New consultant has been created successfully.",
     });
   };
 
-  const handleViewDetails = (id: string, type: string) => {
+  const handleEditConsultant = (consultant) => {
+    setSelectedConsultant(consultant);
+    setIsEditingConsultant(true);
+    setIsConsultantDialogOpen(true);
+  };
+
+  const handleUpdateConsultant = () => {
+    if (!selectedConsultant) return;
+
+    setConsultants(consultants.map(c =>
+      c.id === selectedConsultant.id ? selectedConsultant : c
+    ));
+    setIsConsultantDialogOpen(false);
+    setIsEditingConsultant(false);
+    setSelectedConsultant(null);
+
     toast({
-      title: `Viewing ${type} details`,
-      description: `Details for ${type} ID: ${id}`,
+      title: "Consultant Updated",
+      description: "Consultant details have been updated successfully.",
     });
   };
 
-  const handlePaymentUpdate = (consultantId: string, amount: number) => {
+  const handleDeleteConsultant = (id: number) => {
+    setConsultants(consultants.filter(c => c.id !== id));
     toast({
-      title: "Payment Updated",
-      description: `Payment of ₹${amount.toLocaleString('en-IN')} processed for consultant.`,
+      title: "Consultant Deleted",
+      description: "Consultant has been deleted successfully.",
     });
   };
 
-  const handleAddConsultant = () => {
-    console.log('Adding consultant:', newConsultant);
-    toast({
-      title: "Consultant Added",
-      description: `${newConsultant.name} has been added successfully.`,
+  const handleConsultantInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string) => {
+    setNewConsultant({ ...newConsultant, [field]: e.target.value });
+  };
+
+  const handleSelectedConsultantInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string) => {
+    setSelectedConsultant({ ...selectedConsultant, [field]: e.target.value });
+  };
+
+  const handleCreatePackage = () => {
+    const selectedSlab = incomeSlabs.find(s => s.slabId === newPackage.slabId);
+    const calculatedPrice = getPackagePrice(newPackage.slabId, newPackage.entityType, newPackage.serviceType);
+    
+    const packageToAdd = {
+      id: packages.length + 1,
+      name: newPackage.name,
+      description: newPackage.description,
+      slabId: newPackage.slabId,
+      entityType: newPackage.entityType,
+      serviceType: newPackage.serviceType,
+      price: calculatedPrice,
+      isActive: true,
+    };
+
+    setPackages([...packages, packageToAdd]);
+    setNewPackage({
+      name: '',
+      description: '',
+      slabId: 1,
+      entityType: 'individual',
+      serviceType: 'communications',
+      price: 0,
     });
-    setIsAddConsultantOpen(false);
-    setNewConsultant({ name: '', email: '', password: '', specialization: '' });
+    
+    toast({
+      title: "Package Created",
+      description: "New service package has been created successfully.",
+    });
   };
 
   const handleUpdatePackage = () => {
+    if (!editingPackage) return;
+    
+    const calculatedPrice = getPackagePrice(editingPackage.slabId, editingPackage.entityType, editingPackage.serviceType);
+    
+    setPackages(packages.map(pkg => 
+      pkg.id === editingPackage.id 
+        ? { ...editingPackage, price: calculatedPrice }
+        : pkg
+    ));
+    setEditingPackage(null);
+    
     toast({
       title: "Package Updated",
-      description: `${selectedPackage?.name} has been updated successfully.`,
+      description: "Service package has been updated successfully.",
     });
-    setIsEditPackageOpen(false);
   };
 
-  const getStatusBadge = (status: RequestStatus) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">Pending</Badge>;
-      case 'assigned':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Assigned</Badge>;
-      case 'in-progress':
-        return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">In Progress</Badge>;
-      case 'needs-clarification':
-        return <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">Needs Clarification</Badge>;
-      case 'completed':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Completed</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-
-  const getCurrentRevenueData = () => {
-    return selectedTimeRange === 'week' ? revenueData : monthlyRevenueData;
+  const calculatePackagePrice = (slabId: number, entityType: EntityType, serviceType: ServiceType) => {
+    return getPackagePrice(slabId, entityType, serviceType);
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user?.name}</p>
-        </div>
-        <div className="mt-4 md:mt-0">
-          <Button className="bg-brand-blue hover:bg-brand-lightblue">Generate Reports</Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-6 mb-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Super Admin Dashboard</h1>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="requests">Service Requests</TabsTrigger>
           <TabsTrigger value="consultants">Consultants</TabsTrigger>
           <TabsTrigger value="packages">Packages</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Total Requests</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">30</div>
-                <p className="text-xs text-green-500 flex items-center mt-1">
-                  <span>↑ 12%</span>
-                  <span className="text-gray-400 ml-1">from last month</span>
-                </p>
+              <CardContent className="flex flex-row items-center justify-between p-6">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Users</p>
+                  <p className="text-2xl font-bold text-gray-900">4,524</p>
+                </div>
+                <Users className="h-6 w-6 text-gray-500" />
               </CardContent>
             </Card>
-            
+
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Active Consultants</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">8</div>
-                <p className="text-xs text-green-500 flex items-center mt-1">
-                  <span>↑ 2</span>
-                  <span className="text-gray-400 ml-1">from last month</span>
-                </p>
+              <CardContent className="flex flex-row items-center justify-between p-6">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Revenue</p>
+                  <p className="text-2xl font-bold text-gray-900">₹23,456</p>
+                </div>
+                <DollarSign className="h-6 w-6 text-green-500" />
               </CardContent>
             </Card>
-            
+
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Total Revenue</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">₹12.5L</div>
-                <p className="text-xs text-green-500 flex items-center mt-1">
-                  <span>↑ 18%</span>
-                  <span className="text-gray-400 ml-1">from last month</span>
-                </p>
+              <CardContent className="flex flex-row items-center justify-between p-6">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Cases</p>
+                  <p className="text-2xl font-bold text-gray-900">1,234</p>
+                </div>
+                <FileText className="h-6 w-6 text-blue-500" />
               </CardContent>
             </Card>
-            
+
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Pending Payments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">₹2.07L</div>
-                <p className="text-xs text-red-500 flex items-center mt-1">
-                  <span>↑ 5%</span>
-                  <span className="text-gray-400 ml-1">from last week</span>
-                </p>
+              <CardContent className="flex flex-row items-center justify-between p-6">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Revenue Growth</p>
+                  <p className="text-2xl font-bold text-gray-900">+12%</p>
+                </div>
+                <TrendingUp className="h-6 w-6 text-green-500" />
               </CardContent>
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Requests</CardTitle>
-                <CardDescription>Number of new and completed requests per month</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={monthlyData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="requests" name="New Requests" fill="#3B82F6" />
-                      <Bar dataKey="completed" name="Completed" fill="#10B981" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Request Status Distribution</CardTitle>
-                <CardDescription>Current status of all service requests</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={statusData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {statusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="revenue">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Revenue Analytics</CardTitle>
-                  <CardDescription>Case-wise revenue for different time periods</CardDescription>
-                </div>
-                <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="week">Weekly</SelectItem>
-                    <SelectItem value="month">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <CardTitle>Revenue by Category</CardTitle>
+              <CardDescription>A breakdown of revenue by service category</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-96">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={getCurrentRevenueData()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value, name) => [
-                      name === 'revenue' ? `₹${(value as number).toLocaleString('en-IN')}` : value,
-                      name === 'revenue' ? 'Revenue' : 'Cases'
-                    ]} />
-                    <Legend />
-                    <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} />
-                    <Line type="monotone" dataKey="cases" stroke="#10B981" strokeWidth={3} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={renderCustomizedLabel}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="requests">
+        <TabsContent value="revenue" className="space-y-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Revenue Statistics</h2>
+            <div className="space-x-2">
+              <Button variant="outline" active={selectedDateRange === 'week'} onClick={() => handleDateRangeChange('week')}>This Week</Button>
+              <Button variant="outline" active={selectedDateRange === 'month'} onClick={() => handleDateRangeChange('month')}>This Month</Button>
+              <Button variant="outline" active={selectedDateRange === 'year'} onClick={() => handleDateRangeChange('year')}>This Year</Button>
+            </div>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>Service Requests</CardTitle>
-              <CardDescription>Manage all tax litigation service requests</CardDescription>
+              <CardTitle>Revenue Trend</CardTitle>
+              <CardDescription>A visual representation of revenue over time</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Consultant</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockRequests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell className="font-medium">{request.id}</TableCell>
-                      <TableCell>{request.title}</TableCell>
-                      <TableCell>{request.customer}</TableCell>
-                      <TableCell>{request.consultant}</TableCell>
-                      <TableCell>{getStatusBadge(request.status)}</TableCell>
-                      <TableCell>{request.date}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleViewDetails(request.id, 'request')}
-                          >
-                            View
-                          </Button>
-                          {request.consultant === 'Unassigned' && (
-                            <Button 
-                              size="sm"
-                              onClick={() => handleAssignConsultant(request.id)}
-                            >
-                              Assign
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="Revenue" stroke="#8884d8" name="Revenue" />
+                </LineChart>
+              </ResponsiveContainer>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline">Previous</Button>
-              <Button variant="outline">Next</Button>
+            <CardFooter className="text-sm text-gray-500">
+              Data from the last 12 months
             </CardFooter>
           </Card>
         </TabsContent>
 
-        <TabsContent value="consultants">
+        <TabsContent value="consultants" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Consultant Management</h2>
+            <Dialog open={isConsultantDialogOpen} onOpenChange={setIsConsultantDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-brand-blue hover:bg-brand-lightblue">
+                  <Plus className="mr-2 h-4 w-4" />
+                  {isEditingConsultant ? 'Edit Consultant' : 'Add Consultant'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>{isEditingConsultant ? 'Edit Consultant' : 'Add New Consultant'}</DialogTitle>
+                  <DialogDescription>
+                    {isEditingConsultant ? 'Edit consultant details' : 'Add a new consultant to the system'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="consultantName">Name</Label>
+                      <Input
+                        id="consultantName"
+                        value={isEditingConsultant ? selectedConsultant?.name || '' : newConsultant.name}
+                        onChange={(e) => isEditingConsultant ? handleSelectedConsultantInputChange(e, 'name') : handleConsultantInputChange(e, 'name')}
+                        placeholder="Enter consultant name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="consultantEmail">Email</Label>
+                      <Input
+                        id="consultantEmail"
+                        type="email"
+                        value={isEditingConsultant ? selectedConsultant?.email || '' : newConsultant.email}
+                        onChange={(e) => isEditingConsultant ? handleSelectedConsultantInputChange(e, 'email') : handleConsultantInputChange(e, 'email')}
+                        placeholder="Enter consultant email"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="consultantPhone">Phone</Label>
+                      <Input
+                        id="consultantPhone"
+                        type="tel"
+                        value={isEditingConsultant ? selectedConsultant?.phone || '' : newConsultant.phone}
+                        onChange={(e) => isEditingConsultant ? handleSelectedConsultantInputChange(e, 'phone') : handleConsultantInputChange(e, 'phone')}
+                        placeholder="Enter consultant phone"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="consultantExpertise">Expertise</Label>
+                      <Input
+                        id="consultantExpertise"
+                        value={isEditingConsultant ? selectedConsultant?.expertise || '' : newConsultant.expertise}
+                        onChange={(e) => isEditingConsultant ? handleSelectedConsultantInputChange(e, 'expertise') : handleConsultantInputChange(e, 'expertise')}
+                        placeholder="Enter consultant expertise"
+                      />
+                    </div>
+                  </div>
+                  {!isEditingConsultant && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="consultantUsername">Username</Label>
+                          <Input
+                            id="consultantUsername"
+                            value={newConsultant.username}
+                            onChange={(e) => handleConsultantInputChange(e, 'username')}
+                            placeholder="Enter consultant username"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="consultantPassword">Password</Label>
+                          <Input
+                            id="consultantPassword"
+                            type="password"
+                            value={newConsultant.password}
+                            onChange={(e) => handleConsultantInputChange(e, 'password')}
+                            placeholder="Enter consultant password"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button onClick={isEditingConsultant ? handleUpdateConsultant : handleCreateConsultant} className="bg-brand-blue hover:bg-brand-lightblue">
+                    {isEditingConsultant ? 'Update Consultant' : 'Create Consultant'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Consultants</CardTitle>
-                  <CardDescription>Manage tax litigation consultants and their earnings</CardDescription>
-                </div>
-                <Dialog open={isAddConsultantOpen} onOpenChange={setIsAddConsultantOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-brand-blue hover:bg-brand-lightblue">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Consultant
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Consultant</DialogTitle>
-                      <DialogDescription>
-                        Create a new consultant account with login credentials
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input
-                          id="name"
-                          value={newConsultant.name}
-                          onChange={(e) => setNewConsultant({...newConsultant, name: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={newConsultant.email}
-                          onChange={(e) => setNewConsultant({...newConsultant, email: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="password">Password</Label>
-                        <Input
-                          id="password"
-                          type="password"
-                          value={newConsultant.password}
-                          onChange={(e) => setNewConsultant({...newConsultant, password: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="specialization">Specialization</Label>
-                        <Textarea
-                          id="specialization"
-                          value={newConsultant.specialization}
-                          onChange={(e) => setNewConsultant({...newConsultant, specialization: e.target.value})}
-                          placeholder="e.g., Income Tax, GST, Corporate Tax"
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddConsultantOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleAddConsultant}>Add Consultant</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
+              <CardTitle>Current Consultants</CardTitle>
+              <CardDescription>Manage your consultants and their details</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -580,45 +490,46 @@ const AdminDashboard = () => {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Specialization</TableHead>
-                    <TableHead>Cases Completed</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Expertise</TableHead>
                     <TableHead>Total Earnings</TableHead>
                     <TableHead>Pending Payment</TableHead>
+                    <TableHead>Completed Cases</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockConsultants.map((consultant) => (
+                  {consultants.map((consultant) => (
                     <TableRow key={consultant.id}>
                       <TableCell className="font-medium">{consultant.name}</TableCell>
                       <TableCell>{consultant.email}</TableCell>
-                      <TableCell>{consultant.specialization}</TableCell>
-                      <TableCell>{consultant.casesCompleted}</TableCell>
-                      <TableCell>₹{consultant.totalEarnings.toLocaleString('en-IN')}</TableCell>
+                      <TableCell>{consultant.phone}</TableCell>
+                      <TableCell>{consultant.expertise}</TableCell>
+                      <TableCell>₹{consultant.totalEarnings.toLocaleString()}</TableCell>
+                      <TableCell>₹{consultant.pendingPayment.toLocaleString()}</TableCell>
+                      <TableCell>{consultant.completedCases}</TableCell>
                       <TableCell>
-                        <span className={consultant.pendingPayment > 0 ? "text-red-600 font-medium" : "text-green-600"}>
-                          ₹{consultant.pendingPayment.toLocaleString('en-IN')}
-                        </span>
+                        <Badge variant={consultant.activeStatus === 'Active' ? "default" : "secondary"}>
+                          {consultant.activeStatus}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
-                            onClick={() => handleViewDetails(consultant.id, 'consultant')}
+                            onClick={() => handleEditConsultant(consultant)}
                           >
-                            View
+                            <Edit className="h-4 w-4" />
                           </Button>
-                          {consultant.pendingPayment > 0 && (
-                            <Button 
-                              size="sm"
-                              variant="default"
-                              onClick={() => handlePaymentUpdate(consultant.id, consultant.pendingPayment)}
-                            >
-                              <DollarSign className="mr-1 h-3 w-3" />
-                              Pay
-                            </Button>
-                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteConsultant(consultant.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -626,132 +537,300 @@ const AdminDashboard = () => {
                 </TableBody>
               </Table>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline">Previous</Button>
-              <Button variant="outline">Next</Button>
-            </CardFooter>
           </Card>
         </TabsContent>
 
-        <TabsContent value="packages">
+        <TabsContent value="packages" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Service Packages</h2>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-brand-blue hover:bg-brand-lightblue">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Package
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Create New Service Package</DialogTitle>
+                  <DialogDescription>
+                    Create a new service package based on income slab and entity type.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="packageName">Package Name</Label>
+                      <Input
+                        id="packageName"
+                        value={newPackage.name}
+                        onChange={(e) => setNewPackage({...newPackage, name: e.target.value})}
+                        placeholder="Enter package name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="slabSelect">Income Slab</Label>
+                      <Select 
+                        value={newPackage.slabId.toString()} 
+                        onValueChange={(value) => setNewPackage({...newPackage, slabId: parseInt(value)})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select income slab" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {incomeSlabs.map((slab) => (
+                            <SelectItem key={slab.slabId} value={slab.slabId.toString()}>
+                              {slab.slabName} - {slab.description}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="entityType">Entity Type</Label>
+                      <Select 
+                        value={newPackage.entityType} 
+                        onValueChange={(value: EntityType) => setNewPackage({...newPackage, entityType: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select entity type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {entityTypes.map((entity) => (
+                            <SelectItem key={entity.id} value={entity.id}>
+                              {entity.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="serviceType">Service Type</Label>
+                      <Select 
+                        value={newPackage.serviceType} 
+                        onValueChange={(value: ServiceType) => setNewPackage({...newPackage, serviceType: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select service type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {serviceTypes.map((service) => (
+                            <SelectItem key={service.id} value={service.id}>
+                              {service.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="packageDescription">Description</Label>
+                    <Textarea
+                      id="packageDescription"
+                      value={newPackage.description}
+                      onChange={(e) => setNewPackage({...newPackage, description: e.target.value})}
+                      placeholder="Enter package description"
+                    />
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <Label className="text-sm font-medium">Calculated Price (Based on Rate Card)</Label>
+                    <div className="text-2xl font-bold text-brand-blue">
+                      ₹{calculatePackagePrice(newPackage.slabId, newPackage.entityType, newPackage.serviceType).toLocaleString()}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      This price is automatically calculated based on the selected income slab, entity type, and service type.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleCreatePackage} className="bg-brand-blue hover:bg-brand-lightblue">
+                    Create Package
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>Service Packages</CardTitle>
-              <CardDescription>Manage different service packages and their pricing</CardDescription>
+              <CardTitle>Current Service Packages</CardTitle>
+              <CardDescription>Manage your service packages and pricing</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Package Name</TableHead>
-                    <TableHead>Base Price</TableHead>
+                    <TableHead>Income Slab</TableHead>
+                    <TableHead>Entity Type</TableHead>
+                    <TableHead>Service Type</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockServicePackages.map((pkg) => (
-                    <TableRow key={pkg.id}>
-                      <TableCell className="font-medium">{pkg.name}</TableCell>
-                      <TableCell>₹{pkg.basePrice.toLocaleString('en-IN')}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Dialog open={isEditPackageOpen && selectedPackage?.id === pkg.id} onOpenChange={setIsEditPackageOpen}>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => setSelectedPackage(pkg)}
-                              >
-                                <Edit className="mr-1 h-3 w-3" />
-                                Edit
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Edit Service Package</DialogTitle>
-                                <DialogDescription>
-                                  Update the package details and pricing
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <Label htmlFor="packageName">Package Name</Label>
-                                  <Input
-                                    id="packageName"
-                                    value={selectedPackage?.name || ''}
-                                    onChange={(e) => setSelectedPackage({...selectedPackage, name: e.target.value})}
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="basePrice">Base Price (₹)</Label>
-                                  <Input
-                                    id="basePrice"
-                                    type="number"
-                                    value={selectedPackage?.basePrice || ''}
-                                    onChange={(e) => setSelectedPackage({...selectedPackage, basePrice: parseInt(e.target.value)})}
-                                  />
-                                </div>
-                              </div>
-                              <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsEditPackageOpen(false)}>
-                                  Cancel
+                  {packages.map((pkg) => {
+                    const slab = incomeSlabs.find(s => s.slabId === pkg.slabId);
+                    const entity = entityTypes.find(e => e.id === pkg.entityType);
+                    const service = serviceTypes.find(s => s.id === pkg.serviceType);
+                    
+                    return (
+                      <TableRow key={pkg.id}>
+                        <TableCell className="font-medium">{pkg.name}</TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div className="font-medium">{slab?.slabName}</div>
+                            <div className="text-gray-500 text-xs">{slab?.description}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{entity?.name}</TableCell>
+                        <TableCell>{service?.name}</TableCell>
+                        <TableCell className="font-semibold text-brand-blue">₹{pkg.price.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge variant={pkg.isActive ? "default" : "secondary"}>
+                            {pkg.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setEditingPackage(pkg)}
+                                >
+                                  <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button onClick={handleUpdatePackage}>Update Package</Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Edit Service Package</DialogTitle>
+                                  <DialogDescription>
+                                    Update the service package details.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                {editingPackage && (
+                                  <div className="grid gap-4 py-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <Label htmlFor="editPackageName">Package Name</Label>
+                                        <Input
+                                          id="editPackageName"
+                                          value={editingPackage.name}
+                                          onChange={(e) => setEditingPackage({...editingPackage, name: e.target.value})}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="editSlabSelect">Income Slab</Label>
+                                        <Select 
+                                          value={editingPackage.slabId.toString()} 
+                                          onValueChange={(value) => setEditingPackage({...editingPackage, slabId: parseInt(value)})}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {incomeSlabs.map((slab) => (
+                                              <SelectItem key={slab.slabId} value={slab.slabId.toString()}>
+                                                {slab.slabName} - {slab.description}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <Label htmlFor="editEntityType">Entity Type</Label>
+                                        <Select 
+                                          value={editingPackage.entityType} 
+                                          onValueChange={(value: EntityType) => setEditingPackage({...editingPackage, entityType: value})}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {entityTypes.map((entity) => (
+                                              <SelectItem key={entity.id} value={entity.id}>
+                                                {entity.name}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="editServiceType">Service Type</Label>
+                                        <Select 
+                                          value={editingPackage.serviceType} 
+                                          onValueChange={(value: ServiceType) => setEditingPackage({...editingPackage, serviceType: value})}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {serviceTypes.map((service) => (
+                                              <SelectItem key={service.id} value={service.id}>
+                                                {service.name}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
 
-        <TabsContent value="customers">
-          <Card>
-            <CardHeader>
-              <CardTitle>Customers</CardTitle>
-              <CardDescription>Manage registered customers</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Requests</TableHead>
-                    <TableHead>Join Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockCustomers.map((customer) => (
-                    <TableRow key={customer.id}>
-                      <TableCell className="font-medium">{customer.name}</TableCell>
-                      <TableCell>{customer.email}</TableCell>
-                      <TableCell>{customer.requests}</TableCell>
-                      <TableCell>{customer.joinDate}</TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleViewDetails(customer.id, 'customer')}
-                        >
-                          View Details
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                                    <div>
+                                      <Label htmlFor="editPackageDescription">Description</Label>
+                                      <Textarea
+                                        id="editPackageDescription"
+                                        value={editingPackage.description}
+                                        onChange={(e) => setEditingPackage({...editingPackage, description: e.target.value})}
+                                      />
+                                    </div>
+
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                      <Label className="text-sm font-medium">Updated Price (Based on Rate Card)</Label>
+                                      <div className="text-2xl font-bold text-brand-blue">
+                                        ₹{calculatePackagePrice(editingPackage.slabId, editingPackage.entityType, editingPackage.serviceType).toLocaleString()}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                <DialogFooter>
+                                  <Button onClick={handleUpdatePackage} className="bg-brand-blue hover:bg-brand-lightblue">
+                                    Update Package
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setPackages(packages.filter(p => p.id !== pkg.id));
+                                toast({
+                                  title: "Package Deleted",
+                                  description: "Service package has been deleted successfully.",
+                                });
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline">Previous</Button>
-              <Button variant="outline">Next</Button>
-            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>

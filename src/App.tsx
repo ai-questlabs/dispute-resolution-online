@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import MainLayout from "./components/layout/MainLayout";
+import { CustomerLayout } from "./components/customer/CustomerLayout";
 
 // Pages
 import Index from "./pages/Index";
@@ -43,6 +44,8 @@ const ProtectedRoute = ({ children, requiredRoles = [] }: { children: JSX.Elemen
 };
 
 const AppRoutes = () => {
+  const { user } = useAuth();
+  
   return (
     <Routes>
       {/* Public routes */}
@@ -50,20 +53,26 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Customer routes */}
+      {/* Customer routes with sidebar layout */}
       <Route path="/customer/dashboard" element={
         <ProtectedRoute requiredRoles={['customer']}>
-          <CustomerDashboard />
+          <CustomerLayout>
+            <CustomerDashboard />
+          </CustomerLayout>
         </ProtectedRoute>
       } />
       <Route path="/customer/new-request" element={
         <ProtectedRoute requiredRoles={['customer']}>
-          <NewServiceRequest />
+          <CustomerLayout>
+            <NewServiceRequest />
+          </CustomerLayout>
         </ProtectedRoute>
       } />
       <Route path="/customer/request/:id" element={
         <ProtectedRoute requiredRoles={['customer']}>
-          <ServiceRequestDetail />
+          <CustomerLayout>
+            <ServiceRequestDetail />
+          </CustomerLayout>
         </ProtectedRoute>
       } />
       
@@ -92,9 +101,7 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <MainLayout>
-            <AppRoutes />
-          </MainLayout>
+          <AppRoutes />
           <Toaster />
           <Sonner />
         </AuthProvider>

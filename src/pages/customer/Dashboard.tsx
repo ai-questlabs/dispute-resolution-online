@@ -144,8 +144,8 @@ const CustomerDashboard = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Welcome, {user?.name}</h1>
           <p className="text-gray-600 mt-1">Manage your tax litigation services</p>
@@ -161,7 +161,7 @@ const CustomerDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="flex flex-row items-center p-6">
             <div className="rounded-full bg-blue-100 p-3 mr-4">
@@ -203,7 +203,7 @@ const CustomerDashboard = () => {
         </Card>
       </div>
 
-      <Card className="mb-8">
+      <Card>
         <CardHeader>
           <CardTitle>Your Service Requests</CardTitle>
           <CardDescription>View and manage your tax litigation service requests</CardDescription>
