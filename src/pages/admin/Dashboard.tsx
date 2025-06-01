@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -171,6 +172,25 @@ const monthlyRevenueData = [
   { name: 'Apr', revenue: 680000, cases: 28 },
   { name: 'May', revenue: 590000, cases: 24 },
   { name: 'Jun', revenue: 720000, cases: 30 },
+];
+
+// Add missing monthlyData for the overview tab
+const monthlyData = [
+  { name: 'Jan', requests: 18, completed: 15 },
+  { name: 'Feb', requests: 22, completed: 20 },
+  { name: 'Mar', requests: 16, completed: 14 },
+  { name: 'Apr', requests: 28, completed: 25 },
+  { name: 'May', requests: 24, completed: 22 },
+  { name: 'Jun', requests: 30, completed: 28 },
+];
+
+// Add missing statusData for the overview tab
+const statusData = [
+  { name: 'Pending', value: 5 },
+  { name: 'Assigned', value: 8 },
+  { name: 'In Progress', value: 12 },
+  { name: 'Needs Clarification', value: 3 },
+  { name: 'Completed', value: 15 },
 ];
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
