@@ -8,7 +8,7 @@ interface ApiResponse<T> {
 }
 
 class ApiClient {
-  private baseUrl: string;
+  public baseUrl: string;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
