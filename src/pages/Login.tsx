@@ -29,7 +29,7 @@ const Login = () => {
     } catch (error) {
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: error instanceof Error ? error.message : "Please check your credentials and try again.",
         variant: "destructive",
       });
     } finally {
@@ -50,51 +50,7 @@ const Login = () => {
     } catch (error) {
       toast({
         title: "Google login failed",
-        description: "Please try again or use another login method.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // For demo purposes, we'll provide login credentials for the different user types
-  const loginAsUser = async (userType: string) => {
-    setIsSubmitting(true);
-    let userEmail = '';
-    
-    switch (userType) {
-      case 'customer':
-        userEmail = 'customer@example.com';
-        break;
-      case 'consultant':
-        userEmail = 'consultant@example.com';
-        break;
-      case 'admin':
-        userEmail = 'admin@example.com';
-        break;
-      default:
-        userEmail = 'customer@example.com';
-    }
-    
-    try {
-      await login(userEmail, 'password');
-      toast({
-        title: `Logged in as ${userType}`,
-        description: `Successfully logged in as demo ${userType} user.`,
-      });
-      
-      if (userType === 'admin') {
-        navigate('/admin/dashboard');
-      } else if (userType === 'consultant') {
-        navigate('/consultant/dashboard');
-      } else {
-        navigate('/customer/dashboard');
-      }
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "Please try again.",
+        description: error instanceof Error ? error.message : "Please try again or use another login method.",
         variant: "destructive",
       });
     } finally {
@@ -208,37 +164,6 @@ const Login = () => {
             </p>
           </CardFooter>
         </Card>
-
-        {/* Demo login options - for development purposes only */}
-        <div className="mt-6 space-y-2">
-          <p className="text-center text-sm text-gray-600">For demo purposes:</p>
-          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1 border-brand-blue text-brand-blue"
-              onClick={() => loginAsUser('customer')}
-            >
-              Login as Customer
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex-1 border-brand-blue text-brand-blue"
-              onClick={() => loginAsUser('consultant')}
-            >
-              Login as Consultant
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex-1 border-brand-blue text-brand-blue"
-              onClick={() => loginAsUser('admin')}
-            >
-              Login as Admin
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );

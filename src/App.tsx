@@ -5,8 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import MainLayout from "./components/layout/MainLayout";
 import { CustomerLayout } from "./components/customer/CustomerLayout";
+import { AdminLayout } from "./components/admin/AdminLayout";
 
 // Pages
 import Index from "./pages/Index";
@@ -44,8 +44,6 @@ const ProtectedRoute = ({ children, requiredRoles = [] }: { children: JSX.Elemen
 };
 
 const AppRoutes = () => {
-  const { user } = useAuth();
-  
   return (
     <Routes>
       {/* Public routes */}
@@ -86,7 +84,9 @@ const AppRoutes = () => {
       {/* Admin routes */}
       <Route path="/admin/dashboard" element={
         <ProtectedRoute requiredRoles={['admin']}>
-          <AdminDashboard />
+          <AdminLayout>
+            <AdminDashboard />
+          </AdminLayout>
         </ProtectedRoute>
       } />
 
