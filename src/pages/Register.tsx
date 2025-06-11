@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { googleLogin } = useAuth();
+  const { register: registerUser, googleLogin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -32,9 +31,7 @@ const Register = () => {
     }
     
     try {
-      // In a real app, we would call an API to register the user
-      // For now, we'll just simulate a successful registration using Google login
-      await googleLogin();
+      await registerUser(name, email, password);
       toast({
         title: "Registration successful!",
         description: "Your account has been created.",
@@ -43,7 +40,7 @@ const Register = () => {
     } catch (error) {
       toast({
         title: "Registration failed",
-        description: "Please check your information and try again.",
+        description: error instanceof Error ? error.message : "Please check your information and try again.",
         variant: "destructive",
       });
     } finally {
@@ -64,7 +61,7 @@ const Register = () => {
     } catch (error) {
       toast({
         title: "Google registration failed",
-        description: "Please try again or use another registration method.",
+        description: error instanceof Error ? error.message : "Please try again or use another registration method.",
         variant: "destructive",
       });
     } finally {
